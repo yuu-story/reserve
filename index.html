@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ご予約フォーム</title>
+    <!-- LINEの仕組み（LIFF）を動かすための公式スクリプト -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f9f9f9; color: #333; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        .radio-group { display: flex; gap: 15px; margin-top: 5px; }
+        .radio-group label { font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .radio-group input[type="radio"] { width: auto; }
+        button { width: 100%; padding: 12px; background-color: #06C755; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        button:hover { background-color: #05b04b; }
+    </style>
+</head>
+<body>
+
+    <h2>ご予約情報の入力</h2>
+    <form id="reserveForm">
+        
+        <div class="form-group">
+            <label>お名前</label>
+            <input type="text" id="name" placeholder="例：山田 太郎" required>
+        </div>
+
+        <div class="form-group">
+            <label>ご希望コース</label>
+            <input type="text" id="course" placeholder="例：90分アロマコース" required>
+        </div>
+
+        <div class="form-group">
+            <label>日付</label>
+            <input type="date" id="date" required>
+        </div>
+
+        <div class="form-group">
+            <label>時間</label>
+            <input type="time" id="time" required>
+        </div>
+
+        <div class="form-group">
+            <label>支払方法</label>
+            <div class="radio-group">
+                <label><input type="radio" name="payment" value="現金" checked> 現金</label>
+                <label><input type="radio" name="payment" value="ｸﾚｼﾞｯﾄ"> ｸﾚｼﾞｯﾄ</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>区分</label>
+            <div class="radio-group">
+                <label><input type="radio" name="type" value="新規" checked> 新規</label>
+                <label><input type="radio" name="type" value="会員"> 会員</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>指名</label>
+            <div class="radio-group">
+                <label><input type="radio" name="shimei" value="初指名" checked> 初指名</label>
+                <label><input type="radio" name="shimei" value="本指名"> 本指名</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>利用エリア</label>
+            <input type="text" id="area" placeholder="例：新宿区歌舞伎町" required>
+        </div>
+
+        <div class="form-group">
+            <label>合流方法</label>
+            <div class="radio-group">
+                <label><input type="radio" name="meet" value="ホテル先入り" checked> ホテル先入り</label>
+                <label><input type="radio" name="meet" value="待ち合せ"> 待ち合せ</label>
+            </div>
+        </div>
+
+        <button type="button" onclick="sendReservation()">予約内容を送信する</button>
+    </form>
+
+    <script>
+        // LIFFの初期化
+        liff.init({
+            liffId: "2010733799-HH18a8xi" // ★ここに、ステップ1で取得した「LIFF ID」を入れます！
+        }).then(() => {
+            if (!liff.isLoggedIn()) {
+                liff.login(); // ログインしていなければ自動ログイン
+            }
+        }).catch((err) => {
+            console.error('LIFFの初期化に失敗しました', err);
+        });
+
+        // 送信ボタンが押された時の処理
+        function sendReservation() {
+            const name = document.getElementById('name').value;
+            const course = document.getElementById('course').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const payment = document.querySelector('input[name="payment"]:checked').value;
+            const type = document.querySelector('input[name="type"]:checked').value;
+            const shimei = document.querySelector('input[name="shimei"]:checked').value;
+            const area = document.getElementById('area').value;
+            const meet = document.querySelector('input[name="meet"]:checked').value;
+
+            // 入力チェック
+            if (!name || !course || !date || !time || !area) {
+                alert('未入力の項目があります。');
+                return;
+            }
+
+            // LINEトークに送信するテキストを作成
+            const messageText = `【ご予約申込】\n` +
+                                `お名前：${name}\n` +
+                                `ご希望コース：${course}\n` +
+                                `日付：${date}\n` +
+                                `時間：${time}\n` +
+                                `支払方法[現金or ｸﾚｼﾞｯﾄ]：${payment}\n` +
+                                `区分[新規or会員]：${type}\n` +
+                                `指名[初指名or本指名]：${shimei}\n` +
+                                `利用エリア：${area}\n` +
+                                `合流方法[ホテル先入りor待ち合せ]：${meet}`;
+
+            // LINEのトーク画面にメッセージとして直接送信する
+            liff.sendMessages([{
+                type: 'text',
+                text: messageText
+            }]).then(() => {
+                // 送信に成功したらフォーム画面を自動で閉じる
+                liff.closeWindow();
+            }).catch((err) => {
+                alert('送信に失敗しました。LINEアプリ内からお試しください。');
+                console.error(err);
+            });
+        }
+    </script>
+</body>
+</html>
