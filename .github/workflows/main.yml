@@ -1,17 +1,18 @@
 name: Daily Scraper
 on:
   schedule:
-    - cron: '0 */4 * * *'  # 4時間おきに実行（0時, 4時, 8時, 12時, 16時, 20時）
-  workflow_dispatch:     # 手動実行ボタンも追加
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4  # v3からv4へ更新
       - name: Set up Python
-        uses: actions/setup-python@v4
-        with: {python-version: '3.9'}
+        uses: actions/setup-python@v5 # v4からv5へ更新
+        with:
+          python-version: '3.10'
       - name: Install dependencies
         run: |
           pip install playwright
