@@ -9,39 +9,31 @@ async function run() {
 
   try {
     const instance = axios.create({
-      baseURL: 'https://www.story-tokyo.com',
+      baseURL: 'https://www.story-tokyo.com/g_con/',
       headers: { 'User-Agent': 'Mozilla/5.0' },
-      withCredentials: true // クッキーを保持する設定
+      withCredentials: true 
     });
 
-    // 1. ログイン処理
+    // 1. ログイン
     const loginData = new URLSearchParams();
     loginData.append('girl_user_tel', loginId);
     loginData.append('girl_user_login_pass', password);
     loginData.append('login', 'ログイン');
-
-    console.log("ログイン試行中...");
-    await instance.post('/g_con/', loginData);
+    await instance.post('./', loginData);
     
-    // 2. スケジュールページの取得
-    console.log("スケジュールページを取得中...");
-    const res = await instance.get('/g_con/schedule.php');
+    // 2. 出勤表の編集ページへ移動
+    console.log("シフトページへアクセス中...");
+    const res = await instance.get('./edit_sche.php');
     
-    // 3. データの抽出（ここが重要です！）
+    // 3. データの抽出（シフト表のテーブルを特定）
     const $ = cheerio.load(res.data);
-    
-    // お店のサイト構造に合わせて修正が必要な箇所です
-    // 一旦、ページ内のテーブル全体を取得してみます
-    const shiftContent = $('table').html(); 
-
-    if (!shiftContent) {
-      throw new Error("シフト表が見つかりませんでした。サイトの構造が変わった可能性があります。");
-    }
+    // ページ内でシフトが書かれている場所を特定（formの中のテーブルなど）
+    const shiftContent = $('form').html(); 
 
     // 4. profile.htmlへ書き込み
     let profile = fs.readFileSync('profile.html', 'utf8');
     const regex = /<!-- SHIFT_START -->[\s\S]*?<!-- SHIFT_END -->/;
-    const newContent = `<!-- SHIFT_START -->\n<table>${shiftContent}</table>\n<!-- SHIFT_END -->`;
+    const newContent = `<!-- SHIFT_START -->\n<div class="schedule-data">${shiftContent}</div>\n<!-- SHIFT_END -->`;
     
     profile = profile.replace(regex, newContent);
     fs.writeFileSync('profile.html', profile);
@@ -49,7 +41,7 @@ async function run() {
     console.log("更新完了！");
 
   } catch (error) {
-    console.error("エラー:", error.message);
+    console.error("エラー発生:", error.message);
     process.exit(1);
   }
 }
