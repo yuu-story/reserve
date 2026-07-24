@@ -7,7 +7,6 @@
     <!-- LINEの仕組み（LIFF）を動かすための公式スクリプト -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        /* 前回の予約フォームと完全に同一のカラー・スタイルデザイン */
         body {
             font-family: sans-serif;
             margin: 20px;
@@ -28,12 +27,10 @@
             font-weight: bold;
             font-size: 15px;
         }
-        /* 必須項目の「*」マーク */
         .required::after {
             content: " *";
             color: red;
         }
-        /* 入力エリア（グレーの背景、角丸） */
         input[type="text"], select, textarea {
             width: 100%;
             padding: 12px;
@@ -43,12 +40,10 @@
             background-color: #f1f3f5;
             font-size: 16px;
         }
-        /* 複数行テキスト入力の高さ固定 */
         textarea {
             height: 100px;
             resize: none;
         }
-        /* 選択肢リスト（縦並び・余白） */
         .options-list {
             display: flex;
             flex-direction: column;
@@ -65,7 +60,6 @@
             margin-bottom: 0;
             cursor: pointer;
         }
-        /* ラジオボタンとチェックボックスのサイズ調整 */
         .options-list input[type="radio"],
         .options-list input[type="checkbox"] {
             width: 20px;
@@ -73,7 +67,6 @@
             margin: 0;
             cursor: pointer;
         }
-        /* 緑色の送信ボタン */
         button {
             width: 100%;
             padding: 15px;
@@ -169,13 +162,13 @@
             </select>
         </div>
 
-        <!-- 施術の流れ（案内テキスト） -->
+        <!-- 施術の流れ -->
         <div class="form-group">
             <label>基本的な施術の流れ</label>
             <input type="text" value="アロママッサージ ⇒ 性感 ⇒ 指圧マッサージ" readonly style="background-color: #e9ecef; color: #495057; border: 1px dashed #ced4da;">
         </div>
 
-        <!-- 重点的に施術を受けたい個所や配分 -->
+        <!-- 重点的に施術を受けたい箇所や配分 -->
         <div class="form-group">
             <label>重点的に施術を受けたい箇所や配分</label>
             <textarea id="focus_area" placeholder="例：肩や腰を多めに、性感は優しめで..."></textarea>
@@ -276,13 +269,13 @@
             </div>
         </div>
 
-        <button type="button" onclick="sendCounseling()">予約内容を送信する</button>
+        <button type="button" onclick="sendCounseling()">送信する</button>
     </form>
 
     <script>
         // LIFFの初期化
         liff.init({
-            liffId: "2010734424-ydvrug0g" // ★ここにカウンセリング用の「LIFF ID」を入力してください！
+            liffId: "2010734424-ydvrug0g"
         }).then(() => {
             if (!liff.isLoggedIn()) {
                 liff.login();
@@ -292,7 +285,7 @@
         });
 
         // 送信ボタンが押された時の処理
-        function sendCounseling() {
+        async function sendCounseling() {
             // 単一選択（ラジオ）の取得
             const kikkake = document.querySelector('input[name="kikkake"]:checked').value;
             const kikkake_other = document.getElementById('kikkake_other').value;
@@ -325,38 +318,80 @@
             const options = getCheckedValues('options');
             const toys = getCheckedValues('toys');
 
-            // 「その他」のテキスト調整
             const kikkakeText = kikkake === 'その他' && kikkake_other ? `その他（${kikkake_other}）` : kikkake;
             const yoyakuKikkakeText = yoyaku_kikkake === 'その他' && yoyaku_kikkake_other ? `その他（${yoyaku_kikkake_other}）` : yoyaku_kikkake;
 
-            // LINEトークに送信するテキスト
-            const messageText = `【カウンセリングシート】\n` +
-                                `◆知ったきっかけ：${kikkakeText}\n` +
-                                `◆予約の決め手：${yoyakuKikkakeText}\n` +
-                                `◆女性用風俗利用歴：${fuzoku_exp}\n` +
-                                `◆Story利用：${story_use}\n` +
-                                `◆選んだ理由：${therapist_reason}\n` +
-                                `◆希望コース：${course}\n` +
-                                `◆重点箇所・配分：${focus_area || '特になし'}\n` +
-                                `◆一緒にお風呂：${bath}\n` +
-                                `◆照明：${light}\n` +
-                                `◆BGM：${bgm}\n` +
-                                `◆ご経験：${experience}\n` +
-                                `◆S/M：${sm_type}\n` +
-                                `◆NGプレイ：${ng_play}\n` +
-                                `◆オプション：${options}\n` +
-                                `◆希望おもちゃ：${toys}`;
+            // 【パターン1：LINEアプリ内で開いた場合】
+            if (liff.isInClient()) {
+                const messageText = `【カウンセリングシート】\n` +
+                                    `◆知ったきっかけ：${kikkakeText}\n` +
+                                    `◆予約の決め手：${yoyakuKikkakeText}\n` +
+                                    `◆女性用風俗利用歴：${fuzoku_exp}\n` +
+                                    `◆Story利用：${story_use}\n` +
+                                    `◆選んだ理由：${therapist_reason}\n` +
+                                    `◆希望コース：${course}\n` +
+                                    `◆重点箇所・配分：${focus_area || '特になし'}\n` +
+                                    `◆一緒にお風呂：${bath}\n` +
+                                    `◆照明：${light}\n` +
+                                    `◆BGM：${bgm}\n` +
+                                    `◆ご経験：${experience}\n` +
+                                    `◆S/M：${sm_type}\n` +
+                                    `◆NGプレイ：${ng_play}\n` +
+                                    `◆オプション：${options}\n` +
+                                    `◆希望おもちゃ：${toys}`;
 
-            // LINEのトーク画面にメッセージとして直接送信する
-            liff.sendMessages([{
-                type: 'text',
-                text: messageText
-            }]).then(() => {
-                liff.closeWindow();
-            }).catch((err) => {
-                alert('送信に失敗しました。LINEアプリ内からお試しください。');
-                console.error(err);
-            });
+                liff.sendMessages([{
+                    type: 'text',
+                    text: messageText
+                }]).then(() => {
+                    liff.closeWindow();
+                }).catch((err) => {
+                    alert('送信に失敗しました。');
+                    console.error(err);
+                });
+            } else {
+                // 【パターン2：ブラウザ（Safari/Chromeなど）から開いた場合】
+                const formData = {
+                    "知ったきっかけ": kikkakeText,
+                    "予約の決め手": yoyakuKikkakeText,
+                    "女性用風俗利用歴": fuzoku_exp,
+                    "Story利用": story_use,
+                    "選んだ理由": therapist_reason,
+                    "希望コース": course,
+                    "重点箇所・配分": focus_area || '特になし',
+                    "一緒にお風呂": bath,
+                    "照明": light,
+                    "BGM": bgm,
+                    "ご経験": experience,
+                    "S/M": sm_type,
+                    "NGプレイ": ng_play,
+                    "オプション": options,
+                    "希望おもちゃ": toys
+                };
+
+                // ★ここにCloudflare WorkersのURLを貼り付けてください！
+                const WORKERS_URL = 'profile.fuurontaro.workers.dev';
+
+                try {
+                    const response = await fetch(WORKERS_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        alert('カウンセリングシートを送信しました！');
+                        document.getElementById('counselingForm').reset();
+                    } else {
+                        alert('送信に失敗しました。時間をおいて再度お試しください。');
+                    }
+                } catch (err) {
+                    alert('送信エラーが発生しました。');
+                    console.error(err);
+                }
+            }
         }
     </script>
 </body>
